@@ -77,7 +77,7 @@ export function SessionPanel({ info, sid, t }: SessionPanelProps) {
         {shown.map(([k, vs]) => (
           <Text key={k} wrap="truncate">
             <Text color={t.color.dim}>{strip(k)}: </Text>
-            <Text color={t.color.cornsilk}>{truncLine(strip(k) + ': ', vs)}</Text>
+            <Text color={t.color.text}>{truncLine(strip(k) + ': ', vs)}</Text>
           </Text>
         ))}
 
@@ -139,7 +139,7 @@ export function SessionPanel({ info, sid, t }: SessionPanelProps) {
                 <Text color={t.color.dim}>{`[${s.transport}]`}</Text>
                 <Text color={t.color.dim}>: </Text>
                 {s.connected ? (
-                  <Text color={t.color.cornsilk}>
+                  <Text color={t.color.text}>
                     {s.tools} tool{s.tools === 1 ? '' : 's'}
                   </Text>
                 ) : (
@@ -152,7 +152,7 @@ export function SessionPanel({ info, sid, t }: SessionPanelProps) {
 
         <Text />
 
-        <Text color={t.color.cornsilk}>
+        <Text color={t.color.text}>
           {flat(info.tools).length} tools{' · '}
           {flat(info.skills).length} skills
           {info.mcp_servers?.length ? ` · ${info.mcp_servers.length} MCP` : ''}
@@ -201,12 +201,12 @@ export function Panel({ sections, t, title }: PanelProps) {
           {sec.rows?.map(([k, v], ri) => (
             <Text key={ri} wrap="truncate">
               <Text color={t.color.dim}>{k.padEnd(20)}</Text>
-              <Text color={t.color.cornsilk}>{v}</Text>
+              <Text color={t.color.text}>{v}</Text>
             </Text>
           ))}
 
           {sec.items?.map((item, ii) => (
-            <Text color={t.color.cornsilk} key={ii} wrap="truncate">
+            <Text color={t.color.text} key={ii} wrap="truncate">
               {item}
             </Text>
           ))}
