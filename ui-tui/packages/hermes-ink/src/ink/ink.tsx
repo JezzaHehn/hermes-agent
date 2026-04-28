@@ -63,6 +63,7 @@ import {
   hasSelection,
   moveFocus,
   selectionBounds,
+  selectionSignature,
   type SelectionState,
   selectLineAt,
   selectWordAt,
@@ -214,6 +215,7 @@ export default class Ink {
   // so UI (e.g. footer hints) can react to selection appearing/clearing.
   private readonly selectionListeners = new Set<() => void>()
   private selectionVersion = 0
+  private lastSelectionSignature = ''
   // DOM nodes currently under the pointer (mode-1003 motion). Held here
   // so App.tsx's handleMouseEvent is stateless — dispatchHover diffs
   // against this set and mutates it in place.
@@ -1680,7 +1682,15 @@ export default class Ink {
   private notifySelectionChange(): void {
     this.scheduleRender()
 
-    this.selectionVersion += 1
+    // Only bump version when the selection range actually mutated.
+    // Listeners still fire unconditionally — useHasSelection() snapshots
+    // through React, which dedupes via Object.is on the boolean value.
+    const sig = selectionSignature(this.selection)
+
+    if (sig !== this.lastSelectionSignature) {
+      this.lastSelectionSignature = sig
+      this.selectionVersion += 1
+    }
 
     for (const cb of this.selectionListeners) {
       cb()

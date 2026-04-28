@@ -179,25 +179,40 @@ function sameBinding(a: Keybinding, b: Keybinding): boolean {
   return a.key === b.key && a.command === b.command && a.when === b.when && a.args?.text === b.args?.text
 }
 
+// Tokens whose presence in a `when` clause means the binding fires while
+// the user is interacting with the terminal — the context our bindings
+// target. Used to flag conservative overlap rather than parsing the full
+// VS Code when-clause grammar.
+const TERMINAL_CONTEXT_TOKENS = ['terminalFocus', 'terminalTextSelected']
+
+function whensOverlap(a: string, b: string): boolean {
+  if (a === b) {
+    return true
+  }
+
+  // Empty when = global, overlaps every context.
+  if (!a || !b) {
+    return true
+  }
+
+  // Conservative: if both clauses gate on a terminal-context token, treat
+  // them as overlapping unless identical (we don't parse `&&`/`!`/`||`).
+  // Disjoint contexts like editorFocus vs terminalFocus skip this branch
+  // and stay disjoint.
+  return TERMINAL_CONTEXT_TOKENS.some(t => a.includes(t) && b.includes(t))
+}
+
 // VS Code allows multiple bindings on the same key as long as their `when`
-// clauses don't overlap (e.g. one for `terminalFocus && terminalTextSelected`
-// and another for `editorFocus`). A binding with no `when` is global —
-// overlaps every context — so it always conflicts with any binding on the
-// same key unless they're literally identical. Two non-empty `when` strings
-// are treated as disjoint here (we don't try to evaluate clause overlap).
+// clauses don't overlap. We flag a conflict when the contexts overlap but
+// the bindings differ — e.g. existing `terminalFocus` cmd+c overlaps with
+// our `terminalFocus && terminalTextSelected`, so the existing binding
+// would shadow ours when text isn't selected.
 function bindingsConflict(existing: Keybinding, target: Keybinding): boolean {
   if (existing.key !== target.key) {
     return false
   }
 
-  const eWhen = existing.when ?? ''
-  const tWhen = target.when ?? ''
-
-  if (!eWhen || !tWhen) {
-    return !sameBinding(existing, target)
-  }
-
-  if (eWhen !== tWhen) {
+  if (!whensOverlap(existing.when ?? '', target.when ?? '')) {
     return false
   }
 

@@ -143,6 +143,36 @@ describe('configureTerminalKeybindings', () => {
     expect(writeFile).not.toHaveBeenCalled()
   })
 
+  it('flags an overlapping terminal-context binding as a conflict', async () => {
+    // Existing `cmd+c` scoped to plain `terminalFocus` overlaps with our
+    // `terminalFocus && terminalTextSelected` — both fire when the
+    // terminal is focused with text selected, so the existing binding
+    // would shadow ours. Treat as a conflict even though the strings
+    // aren't identical.
+    const mkdir = vi.fn().mockResolvedValue(undefined)
+    const readFile = vi.fn().mockResolvedValue(
+      JSON.stringify([
+        {
+          key: 'cmd+c',
+          command: 'workbench.action.terminal.copySelection',
+          when: 'terminalFocus'
+        }
+      ])
+    )
+    const writeFile = vi.fn().mockResolvedValue(undefined)
+    const copyFile = vi.fn().mockResolvedValue(undefined)
+
+    const result = await configureTerminalKeybindings('vscode', {
+      fileOps: { copyFile, mkdir, readFile, writeFile },
+      homeDir: '/Users/me',
+      platform: 'darwin'
+    })
+
+    expect(result.success).toBe(false)
+    expect(result.message).toContain('cmd+c')
+    expect(writeFile).not.toHaveBeenCalled()
+  })
+
   it('does not flag a disjoint-when binding on the same key as a conflict', async () => {
     // VS Code allows multiple bindings for the same key when their `when`
     // clauses don't overlap. A user's pre-existing cmd+c binding scoped to
