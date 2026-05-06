@@ -1003,6 +1003,71 @@ display:
 #   redact_pii: false
 
 # =============================================================================
+# Time-Based Provider and Model Selection
+# =============================================================================
+# Schedule different providers/models based on time windows to optimize for
+# cost (off-peak pricing) or quality. Time windows resolve once at session start;
+# use /new to re-evaluate or /model to override for the current session.
+#
+# Example: Use cheaper models at night, premium models during work hours
+#
+# time_windows:
+#   enabled: true
+#   timezone: "America/New_York"
+#   
+#   # Default: use this provider/model outside all defined windows
+#   default:
+#     provider: "openrouter"
+#     model: "anthropic/claude-opus-4.6"
+#   
+#   # Time-based windows: evaluated in order, first matching window wins
+#   windows:
+#     # Off-peak hours: use cheaper models
+#     - name: "night-cheap"
+#       description: "Use budget models during off-peak hours"
+#       enabled: true
+#       schedule:
+#         type: "daily"
+#         start_time: "22:00"  # 10 PM
+#         end_time: "06:00"    # 6 AM (wraps past midnight)
+#       provider:
+#         provider: "openrouter"
+#         model: "google/gemini-3-flash"
+#         # Optional: provider-specific routing preferences (OpenRouter only)
+#         provider_routing:
+#           sort: "price"
+#           data_collection: "deny"
+#     
+#     # Weekend special: different pricing on weekends
+#     - name: "weekend-budget"
+#       description: "Budget models on weekends"
+#       enabled: true
+#       schedule:
+#         type: "weekly"
+#         days: ["saturday", "sunday"]
+#         # Optionally filter by time range too
+#         start_time: "00:00"
+#         end_time: "23:59"
+#       provider:
+#         provider: "openrouter"
+#         model: "anthropic/claude-sonnet-4"
+#         provider_routing:
+#           sort: "price"
+#     
+#     # Peak hours: premium quality
+#     - name: "peak-quality"
+#       description: "Premium models during peak work hours"
+#       enabled: true
+#       schedule:
+#         type: "daily"
+#         days: ["weekday"]  # monday-friday
+#         start_time: "09:00"  # 9 AM
+#         end_time: "17:00"    # 5 PM
+#       provider:
+#         provider: "anthropic"
+#         model: "claude-opus-4.6"
+
+# =============================================================================
 # Shell-script hooks
 # =============================================================================
 # Register shell scripts as plugin-hook callbacks.  Each entry is executed as

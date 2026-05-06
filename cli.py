@@ -590,6 +590,19 @@ def load_cli_config() -> Dict[str, Any]:
         if redact is not None:
             os.environ["HERMES_REDACT_SECRETS"] = str(redact).lower()
 
+    # Validate time_windows configuration if present
+    if "time_windows" in defaults:
+        from agent.time_window_selector import validate_time_windows_config
+        time_windows_config = defaults["time_windows"]
+        if isinstance(time_windows_config, dict):
+            validation_errors = validate_time_windows_config(time_windows_config)
+            if validation_errors:
+                for error in validation_errors:
+                    logger.error(f"time_windows configuration error: {error}")
+                # Remove invalid time_windows config to prevent runtime errors
+                logger.warning("Removing invalid time_windows configuration")
+                del defaults["time_windows"]
+
     return defaults
 
 # Load configuration at module startup
